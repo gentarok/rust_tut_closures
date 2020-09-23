@@ -8,20 +8,7 @@ fn main() {
     generate_workout(simulated_user_specified_value, simulated_random_number);
 }
 
-// fn simulated_expensive_caluculation(intensity: u32) -> u32 {
-//     println!("calculation slowly...");
-//     thread::sleep(Duration::from_secs(2));
-//     intensity
-// }
-
 fn generate_workout(intensity: u32, random_number: u32) {
-    // let expensive_result = simulated_expensive_caluculation(intensity);
-    // let expensive_closure = |num| {
-    //     println!("calculation slowly...");
-    //     thread::sleep(Duration::from_secs(2));
-    //     num
-    // };
-
     let mut cacher = Cacher::new(|num| {
         println!("calculation slowly...");
         thread::sleep(Duration::from_secs(2));
@@ -29,9 +16,6 @@ fn generate_workout(intensity: u32, random_number: u32) {
     });
 
     if intensity < 25 {
-        // println!("Today, do {} pushups!", expensive_closure(intensity));
-
-        // println!("Next, do {} situps!", expensive_closure(intensity));
         println!("Today, do {} pushups!", cacher.value(intensity));
 
         println!("Next, do {} situps!", cacher.value(intensity));
@@ -39,7 +23,6 @@ fn generate_workout(intensity: u32, random_number: u32) {
         if random_number == 3 {
             println!("Take a break today! Remember to stay hydrated!");
         } else {
-            // println!("Today, run for {} minutes!", expensive_closure(intensity));
             println!("Today, run for {} minutes!", cacher.value(intensity));
         }
     }
