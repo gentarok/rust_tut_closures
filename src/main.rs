@@ -1,3 +1,4 @@
+use std::collections::HashMap;
 use std::thread;
 use std::time::Duration;
 
@@ -33,7 +34,7 @@ where
     T: Fn(u32) -> u32,
 {
     calculation: T,
-    value: Option<u32>,
+    values: HashMap<u32, u32>,
 }
 
 impl<T> Cacher<T>
@@ -43,18 +44,38 @@ where
     fn new(calculation: T) -> Self {
         Cacher {
             calculation,
-            value: None,
+            values: HashMap::new(),
         }
     }
 
     fn value(&mut self, arg: u32) -> u32 {
-        match self.value {
-            Some(v) => v,
+        let value = self.values.get(&arg);
+        match value {
+            Some(v) => *v,
             None => {
                 let v = (self.calculation)(arg);
-                self.value = Some(v);
+                self.values.insert(arg, v);
                 v
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn call_with_different_values() {
+        // arrange
+        let mut c = Cacher::new(|a| a);
+
+        let v1 = c.value(1);
+        assert_eq!(v1, 1);
+
+        // act
+        let v2 = c.value(2);
+        // assert
+        assert_eq!(v2, 2);
     }
 }
