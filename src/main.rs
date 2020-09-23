@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::hash::Hash;
 use std::thread;
 use std::time::Duration;
 
@@ -29,17 +30,19 @@ fn generate_workout(intensity: u32, random_number: u32) {
     }
 }
 
-struct Cacher<T>
+struct Cacher<T, K, V>
 where
-    T: Fn(u32) -> u32,
+    T: Fn(K) -> V,
 {
     calculation: T,
-    values: HashMap<u32, u32>,
+    values: HashMap<K, V>,
 }
 
-impl<T> Cacher<T>
+impl<T, K, V> Cacher<T, K, V>
 where
-    T: Fn(u32) -> u32,
+    T: Fn(K) -> V,
+    K: Hash + Eq + Copy,
+    V: Copy,
 {
     fn new(calculation: T) -> Self {
         Cacher {
@@ -48,7 +51,7 @@ where
         }
     }
 
-    fn value(&mut self, arg: u32) -> u32 {
+    fn value(&mut self, arg: K) -> V {
         let value = self.values.get(&arg);
         match value {
             Some(v) => *v,
@@ -77,5 +80,19 @@ mod test {
         let v2 = c.value(2);
         // assert
         assert_eq!(v2, 2);
+    }
+
+    #[test]
+    fn call_with_different_strings() {
+        // arrange
+        let mut c = Cacher::new(|a| a);
+
+        let v1 = c.value("abc");
+        assert_eq!(v1, "abc");
+
+        // act
+        let v2 = c.value("def");
+        // assert
+        assert_eq!(v2, "def");
     }
 }
