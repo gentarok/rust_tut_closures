@@ -1,3 +1,5 @@
+use std::collections::HashMap;
+use std::hash::Hash;
 use std::thread;
 use std::time::Duration;
 
@@ -28,33 +30,83 @@ fn generate_workout(intensity: u32, random_number: u32) {
     }
 }
 
-struct Cacher<T>
+struct Cacher<T, K, V>
 where
-    T: Fn(u32) -> u32,
+    T: Fn(K) -> V,
 {
     calculation: T,
-    value: Option<u32>,
+    values: HashMap<K, V>,
 }
 
-impl<T> Cacher<T>
+impl<T, K, V> Cacher<T, K, V>
 where
-    T: Fn(u32) -> u32,
+    T: Fn(K) -> V,
+    K: Hash + Eq + Copy,
+    V: Copy,
 {
     fn new(calculation: T) -> Self {
         Cacher {
             calculation,
-            value: None,
+            values: HashMap::new(),
         }
     }
 
-    fn value(&mut self, arg: u32) -> u32 {
-        match self.value {
-            Some(v) => v,
+    fn value(&mut self, arg: K) -> V {
+        let value = self.values.get(&arg);
+        match value {
+            Some(v) => *v,
             None => {
                 let v = (self.calculation)(arg);
-                self.value = Some(v);
+                self.values.insert(arg, v);
                 v
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn call_with_different_values() {
+        // arrange
+        let mut c = Cacher::new(|a| a);
+
+        let v1 = c.value(1);
+        assert_eq!(v1, 1);
+
+        // act
+        let v2 = c.value(2);
+        // assert
+        assert_eq!(v2, 2);
+    }
+
+    #[test]
+    fn call_with_different_strings() {
+        // arrange
+        let mut c = Cacher::new(|a| a);
+
+        let v1 = c.value("abc");
+        assert_eq!(v1, "abc");
+
+        // act
+        let v2 = c.value("def");
+        // assert
+        assert_eq!(v2, "def");
+    }
+
+    #[test]
+    fn call_with_different_type_values() {
+        // arrange
+        let mut c = Cacher::new(|a: &str| a.len());
+
+        let v1 = c.value("abc");
+        assert_eq!(v1, 3);
+
+        // act
+        let v2 = c.value("defghi");
+        // assert
+        assert_eq!(v2, 6);
     }
 }
