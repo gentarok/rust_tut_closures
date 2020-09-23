@@ -95,4 +95,18 @@ mod test {
         // assert
         assert_eq!(v2, "def");
     }
+
+    #[test]
+    fn call_with_different_type_values() {
+        // arrange
+        let mut c = Cacher::new(|a: &str| a.len());
+
+        let v1 = c.value("abc");
+        assert_eq!(v1, 3);
+
+        // act
+        let v2 = c.value("defghi");
+        // assert
+        assert_eq!(v2, 6);
+    }
 }
